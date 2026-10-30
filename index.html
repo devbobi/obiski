@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="sl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Obiski">
+<meta name="theme-color" content="#1f7a6d">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>Obiski</title>
+<style>
+:root {
+  --bg: #f3f6f5;
+  --card: #ffffff;
+  --text: #16211f;
+  --muted: #5d6d69;
+  --line: #dbe4e1;
+  --accent: #1f7a6d;
+  --accent-text: #ffffff;
+  --accent-soft: #dcefeb;
+  --done: #8aa09a;
+  --danger: #b3261e;
+  --sh-d: #8a5a00; --sh-d-bg: #fdecc4;
+  --sh-p: #1b4f9c; --sh-p-bg: #dbe8fb;
+  --sh-z: #a1241c; --sh-z-bg: #fbdcd9;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101615;
+    --card: #1a2321;
+    --text: #e8f0ee;
+    --muted: #9fb2ad;
+    --line: #2a3835;
+    --accent: #3fb3a2;
+    --accent-text: #08201c;
+    --accent-soft: #1d3a36;
+    --done: #6b807a;
+    --danger: #f2877f;
+    --sh-d: #f4c566; --sh-d-bg: #3d3010;
+    --sh-p: #8fb8f2; --sh-p-bg: #172b49;
+    --sh-z: #f2a29b; --sh-z-bg: #4a1c18;
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { font-size: 17px; }
+html.big { font-size: 21px; }
+html, body { margin: 0; }
+body {
+  background: var(--bg); color: var(--text);
+  font: 1rem/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  padding-bottom: calc(100px + env(safe-area-inset-bottom));
+}
+button { font: inherit; color: inherit; }
+header {
+  position: sticky; top: 0; z-index: 5; background: var(--bg);
+  padding: calc(10px + env(safe-area-inset-top)) 16px 10px; border-bottom: 1px solid var(--line);
+}
+.top { display: flex; align-items: center; gap: 10px; }
+.top h1 { margin: 0; font-size: 1.4rem; flex: none; }
+.top input { flex: 1; min-width: 0; padding: 10px 12px; }
+.gear { flex: none; width: 44px; height: 44px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-size: 1.2rem; padding: 0; }
+main { padding: 12px 16px; }
+
+/* koledar */
+.cal { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 10px; }
+.calhead { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; }
+.calhead .title { flex: 1; text-align: center; font-weight: 700; font-size: 1.05rem; }
+.calhead button { width: 44px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); font-size: 1.2rem; padding: 0; }
+.calhead button.today { width: auto; padding: 0 12px; font-size: .85rem; font-weight: 600; }
+.grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; }
+.wd { text-align: center; font-size: .75rem; color: var(--muted); padding: 4px 0; font-weight: 600; }
+.day {
+  position: relative; height: 2.9rem; border-radius: 10px; border: 1px solid transparent;
+  background: transparent; padding: 3px 0 0; display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.day.sel { background: var(--accent); color: var(--accent-text); }
+.day.today:not(.sel) { border-color: var(--accent); }
+.day.blank { visibility: hidden; }
+.day .n { font-weight: 600; font-size: .95rem; }
+.badge { font-size: .62rem; font-weight: 800; border-radius: 4px; padding: 0 4px; line-height: 1.3; }
+.badge.d { color: var(--sh-d); background: var(--sh-d-bg); }
+.badge.p { color: var(--sh-p); background: var(--sh-p-bg); }
+.badge.z { color: var(--sh-z); background: var(--sh-z-bg); }
+.dots { display: flex; gap: 2px; height: 6px; }
+.dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--accent); }
+.day.sel .dots i { background: var(--accent-text); }
+.dots i.all { opacity: .4; }
+
+/* izbran dan */
+.dayhead { display: flex; align-items: center; gap: 6px; margin: 18px 0 8px; }
+.dayhead h2 { flex: 1; margin: 0; font-size: 1.1rem; }
+.dayhead button { width: 44px; height: 40px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); font-size: 1.2rem; padding: 0; }
+.shifts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+.shifts button { padding: 10px 4px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); font-weight: 600; font-size: .9rem; }
+.shifts button[aria-pressed="true"].d { background: var(--sh-d-bg); color: var(--sh-d); border-color: var(--sh-d); }
+.shifts button[aria-pressed="true"].p { background: var(--sh-p-bg); color: var(--sh-p); border-color: var(--sh-p); }
+.shifts button[aria-pressed="true"].z { background: var(--sh-z-bg); color: var(--sh-z); border-color: var(--sh-z); }
+.summary { color: var(--muted); font-size: .9rem; margin: 0 0 10px; }
+
+/* obiski */
+.visit { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; }
+.visit.done .who, .visit.done .what { color: var(--done); text-decoration: line-through; }
+.row1 { display: flex; align-items: flex-start; gap: 12px; }
+.check { flex: none; width: 36px; height: 36px; border-radius: 50%; border: 2px solid var(--accent); background: transparent; color: var(--accent-text); font-size: 1.1rem; line-height: 1; padding: 0; }
+.visit.done .check { background: var(--accent); }
+.main { flex: 1; min-width: 0; }
+.time { font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.who { font-weight: 700; font-size: 1.08rem; }
+.what { color: var(--text); font-size: .95rem; }
+.meta { color: var(--muted); font-size: .88rem; margin-top: 2px; }
+.note { color: var(--muted); font-size: .92rem; margin-top: 4px; white-space: pre-wrap; }
+.edit { flex: none; border: 0; background: none; color: var(--muted); font-size: .9rem; padding: 6px 2px; }
+.links { display: flex; gap: 8px; margin-top: 10px; }
+a.nav, a.tel { display: flex; align-items: center; gap: 8px; padding: 12px 14px; border-radius: 10px; text-decoration: none; font-weight: 600; }
+a.nav { flex: 1; min-width: 0; background: var(--accent); color: var(--accent-text); }
+a.nav .addr { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.tel { background: var(--accent-soft); color: var(--accent); }
+.empty { text-align: center; color: var(--muted); margin: 28px 0; }
+.sdate { display: block; width: 100%; text-align: left; border: 0; background: none; margin: 18px 0 8px; padding: 4px 0; font-size: .85rem; text-transform: uppercase; letter-spacing: .05em; color: var(--accent); font-weight: 700; }
+.fab {
+  position: fixed; right: 16px; bottom: calc(16px + env(safe-area-inset-bottom)); z-index: 6;
+  background: var(--accent); color: var(--accent-text); border: 0; border-radius: 28px;
+  padding: 16px 22px; font-weight: 700; box-shadow: 0 4px 14px rgba(0,0,0,.25);
+}
+
+/* listi */
+.sheet-bg { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 10; display: none; }
+.sheet-bg.open { display: block; }
+.sheet { position: absolute; left: 0; right: 0; bottom: 0; max-height: 94%; overflow-y: auto; background: var(--bg); border-radius: 20px 20px 0 0; padding: 16px 16px calc(20px + env(safe-area-inset-bottom)); }
+.sheet h3 { margin: 0 0 8px; font-size: 1.25rem; }
+label { display: block; font-size: .85rem; color: var(--muted); margin: 12px 0 4px; }
+input, textarea, select { width: 100%; font: inherit; font-size: 16px; color: var(--text); background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 12px; }
+textarea { min-height: 70px; resize: vertical; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.addr2 { display: grid; grid-template-columns: 2fr 1fr; gap: 10px; }
+.actions { display: flex; gap: 10px; margin-top: 18px; }
+.actions button { flex: 1; padding: 14px; border-radius: 12px; font-weight: 700; border: 1px solid var(--line); background: var(--card); }
+.actions .save { background: var(--accent); color: var(--accent-text); border-color: var(--accent); flex: 2; }
+.actions .del { color: var(--danger); }
+.setbtns { display: grid; gap: 10px; margin-top: 12px; }
+.setbtns button { padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--card); font-weight: 600; }
+.hint { color: var(--muted); font-size: .85rem; margin-top: 14px; }
+</style>
+</head>
+<body>
+<header>
+  <div class="top">
+    <h1>Obiski</h1>
+    <input id="iskanje" type="search" placeholder="Išči osebo, naslov…" enterkeyhint="search">
+    <button class="gear" id="gear" aria-label="Nastavitve">&#9881;</button>
+  </div>
+</header>
+<main id="main"></main>
+<button class="fab" id="add">+ Nov obisk</button>
+
+<div class="sheet-bg" id="bg">
+  <form class="sheet" id="form" autocomplete="off">
+    <h3 id="formTitle">Nov obisk</h3>
+    <label for="oseba">Oseba</label>
+    <input id="oseba" required autocapitalize="words">
+    <label for="telefon">Telefon</label>
+    <input id="telefon" type="tel" inputmode="tel">
+    <label for="obisk">Vrsta obiska</label>
+    <input id="obisk" placeholder="npr. oskrba rane, kontrola tlaka" list="vrste">
+    <datalist id="vrste"></datalist>
+    <label for="diagnoza">Diagnoza</label>
+    <input id="diagnoza">
+    <label for="zdravnik">Zdravnik</label>
+    <input id="zdravnik" list="zdravniki" autocapitalize="words">
+    <datalist id="zdravniki"></datalist>
+    <div class="addr2">
+      <div><label for="ulica">Ulica</label><input id="ulica" required autocapitalize="words"></div>
+      <div><label for="hisna">Hišna št.</label><input id="hisna" autocapitalize="characters"></div>
+    </div>
+    <label for="kraj">Kraj</label>
+    <input id="kraj" required autocapitalize="words" list="kraji">
+    <datalist id="kraji"></datalist>
+    <div class="two">
+      <div><label for="datum">Datum</label><input id="datum" type="date" required></div>
+      <div><label for="ura">Ura</label><input id="ura" type="time"></div>
+    </div>
+    <label for="opomba">Opomba</label>
+    <textarea id="opomba"></textarea>
+    <div class="actions">
+      <button type="button" class="del" id="del" hidden>Izbriši</button>
+      <button type="button" id="cancel">Prekliči</button>
+      <button type="submit" class="save">Shrani</button>
+    </div>
+  </form>
+</div>
+
+<div class="sheet-bg" id="bg2">
+  <div class="sheet">
+    <h3>Nastavitve</h3>
+    <label for="navapp">Navigacija</label>
+    <select id="navapp">
+      <option value="google">Google Zemljevidi</option>
+      <option value="apple">Apple Zemljevidi</option>
+    </select>
+    <label for="velikost">Velikost pisave</label>
+    <select id="velikost">
+      <option value="normal">Normalna</option>
+      <option value="big">Velika</option>
+    </select>
+    <div class="setbtns">
+      <button id="export">Shrani varnostno kopijo</button>
+      <button id="import">Obnovi iz kopije</button>
+    </div>
+    <p class="hint">Podatki so shranjeni samo v tem telefonu. Če zamenjaš telefon ali izbrišeš podatke Safarija, jih brez kopije ne dobiš nazaj.</p>
+    <div class="actions"><button type="button" class="save" id="close2">Zapri</button></div>
+  </div>
+</div>
+
+<script>
+const K_VISITS = "obiski-v1", K_SHIFTS = "obiski-izmene", K_SET = "obiski-nastavitve";
+const MONTHS = ["januar","februar","marec","april","maj","junij","julij","avgust","september","oktober","november","december"];
+const WEEKDAYS = ["nedelja","ponedeljek","torek","sreda","četrtek","petek","sobota"];
+const SHIFTS = { d: "Dopoldne", p: "Popoldne", z: "Dežurna" };
+const SHIFT_BADGE = { d: "D", p: "P", z: "Ž" };
+
+let visits = [], shifts = {}, settings = { nav: "google", big: false };
+let sel, mon;           // izbran dan (yyyy-mm-dd), prikazani mesec {y, m}
+let query = "";
+let editingId = null;
+
+function read(key, fallback) {
+  try { const v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; } catch (e) { return fallback; }
+}
+function write(key, val) {
+  try { localStorage.setItem(key, JSON.stringify(val)); } catch (e) { alert("Shranjevanje ni uspelo."); }
+}
+const z2 = n => String(n).padStart(2, "0");
+const iso = d => d.getFullYear() + "-" + z2(d.getMonth() + 1) + "-" + z2(d.getDate());
+const parse = s => { const [y, m, d] = s.split("-").map(Number); return new Date(y, m - 1, d); };
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = id => document.getElementById(id);
+
+function addrOf(v) { return (v.ulica + " " + (v.hisna || "")).trim() + ", " + v.kraj; }
+function mapsUrl(v) {
+  const dest = encodeURIComponent(addrOf(v) + ", Slovenija");
+  if (settings.nav === "apple") return "https://maps.apple.com/?dirflg=d&daddr=" + dest;
+  return "https://www.google.com/maps/dir/?api=1&travelmode=driving&destination=" + dest;
+}
+function dayLabel(s) {
+  const d = parse(s), t = new Date();
+  const diff = Math.round((d - new Date(t.getFullYear(), t.getMonth(), t.getDate())) / 864e5);
+  const base = WEEKDAYS[d.getDay()] + ", " + d.getDate() + ". " + MONTHS[d.getMonth()];
+  const cap = base.charAt(0).toUpperCase() + base.slice(1);
+  if (diff === 0) return "Danes, " + base;
+  if (diff === 1) return "Jutri, " + base;
+  if (diff === -1) return "Včeraj, " + base;
+  return cap;
+}
+function sortVisits(a, b) { return (a.datum + (a.ura || "99:99")).localeCompare(b.datum + (b.ura || "99:99")); }
+
+function visitHtml(v) {
+  return '<div class="visit' + (v.opravljeno ? " done" : "") + '">' +
+    '<div class="row1">' +
+    '<button class="check" data-done="' + v.id + '" aria-label="Opravljeno">' + (v.opravljeno ? "✓" : "") + "</button>" +
+    '<div class="main">' +
+    (v.ura ? '<span class="time">' + esc(v.ura) + "</span> " : "") +
+    '<span class="who">' + esc(v.oseba) + "</span>" +
+    (v.obisk ? '<div class="what">' + esc(v.obisk) + "</div>" : "") +
+    (v.diagnoza || v.zdravnik ? '<div class="meta">' + [v.diagnoza && "Diagnoza: " + esc(v.diagnoza), v.zdravnik && "Zdravnik: " + esc(v.zdravnik)].filter(Boolean).join(" · ") + "</div>" : "") +
+    (v.opomba ? '<div class="note">' + esc(v.opomba) + "</div>" : "") +
+    "</div>" +
+    '<button class="edit" data-edit="' + v.id + '">Uredi</button>' +
+    "</div>" +
+    '<div class="links">' +
+    '<a class="nav" href="' + esc(mapsUrl(v)) + '"><span>➤</span><span class="addr">' + esc(addrOf(v)) + "</span></a>" +
+    (v.telefon ? '<a class="tel" href="tel:' + esc(v.telefon.replace(/[^\d+]/g, "")) + '">☎</a>' : "") +
+    "</div></div>";
+}
+
+function calendarHtml() {
+  const { y, m } = mon;
+  const first = new Date(y, m, 1);
+  const offset = (first.getDay() + 6) % 7;           // ponedeljek = 0
+  const days = new Date(y, m + 1, 0).getDate();
+  const today = iso(new Date());
+  const byDay = {};
+  for (const v of visits) (byDay[v.datum] = byDay[v.datum] || []).push(v);
+  let cells = ["P", "T", "S", "Č", "P", "S", "N"].map(w => '<div class="wd">' + w + "</div>").join("");
+  for (let i = 0; i < offset; i++) cells += '<button class="day blank" tabindex="-1" aria-hidden="true"></button>';
+  for (let d = 1; d <= days; d++) {
+    const key = y + "-" + z2(m + 1) + "-" + z2(d);
+    const list = byDay[key] || [];
+    const dots = list.slice(0, 4).map(v => '<i class="' + (v.opravljeno ? "all" : "") + '"></i>').join("");
+    const sh = shifts[key];
+    cells += '<button class="day' + (key === sel ? " sel" : "") + (key === today ? " today" : "") + '" data-day="' + key + '">' +
+      '<span class="n">' + d + "</span>" +
+      (sh ? '<span class="badge ' + sh + '">' + SHIFT_BADGE[sh] + "</span>" : "") +
+      '<span class="dots">' + dots + "</span></button>";
+  }
+  return '<section class="cal"><div class="calhead">' +
+    '<button data-mon="-1" aria-label="Prejšnji mesec">‹</button>' +
+    '<div class="title">' + MONTHS[m].charAt(0).toUpperCase() + MONTHS[m].slice(1) + " " + y + "</div>" +
+    '<button class="today" data-today="1">Danes</button>' +
+    '<button data-mon="1" aria-label="Naslednji mesec">›</button>' +
+    '</div><div class="grid">' + cells + "</div></section>";
+}
+
+function dayHtml() {
+  const list = visits.filter(v => v.datum === sel).sort(sortVisits);
+  const sh = shifts[sel];
+  const done = list.filter(v => v.opravljeno).length;
+  return '<div class="dayhead">' +
+    '<button data-step="-1" aria-label="Prejšnji dan">‹</button>' +
+    "<h2>" + esc(dayLabel(sel)) + "</h2>" +
+    '<button data-step="1" aria-label="Naslednji dan">›</button></div>' +
+    '<div class="shifts" role="group" aria-label="Izmena">' +
+    Object.keys(SHIFTS).map(k => '<button class="' + k + '" data-shift="' + k + '" aria-pressed="' + (sh === k) + '">' + SHIFTS[k] + "</button>").join("") +
+    "</div>" +
+    (list.length ? '<p class="summary">Obiskov: ' + list.length + " · opravljenih: " + done + "</p>" + list.map(visitHtml).join("")
+      : '<p class="empty">Ta dan ni vnesenih obiskov.</p>');
+}
+
+function searchHtml() {
+  const q = query.toLowerCase();
+  const hits = visits.filter(v => [v.oseba, v.ulica, v.hisna, v.kraj, v.obisk, v.diagnoza, v.zdravnik, v.telefon, v.opomba].join(" ").toLowerCase().includes(q)).sort(sortVisits).reverse();
+  if (!hits.length) return '<p class="empty">Ni zadetkov.</p>';
+  let html = "", last = "";
+  for (const v of hits) {
+    if (v.datum !== last) { html += '<button class="sdate" data-goto="' + v.datum + '">' + esc(dayLabel(v.datum)) + "</button>"; last = v.datum; }
+    html += visitHtml(v);
+  }
+  return html;
+}
+
+function render() {
+  $("main").innerHTML = query.trim() ? searchHtml() : calendarHtml() + dayHtml();
+}
+
+function fillSuggestions() {
+  const uniq = k => [...new Set(visits.map(v => v[k]).filter(Boolean))].sort();
+  const opts = k => uniq(k).map(x => '<option value="' + esc(x) + '">').join("");
+  $("vrste").innerHTML = opts("obisk");
+  $("zdravniki").innerHTML = opts("zdravnik");
+  $("kraji").innerHTML = opts("kraj");
+}
+const FIELDS = ["oseba", "telefon", "obisk", "diagnoza", "zdravnik", "ulica", "hisna", "kraj", "datum", "ura", "opomba"];
+function openForm(id) {
+  editingId = id || null;
+  const v = visits.find(x => x.id === id);
+  fillSuggestions();
+  $("formTitle").textContent = v ? "Uredi obisk" : "Nov obisk";
+  for (const f of FIELDS) $(f).value = v ? (v[f] || "") : "";
+  if (!v) { $("datum").value = sel; $("kraj").value = read("obiski-zadnji-kraj", "Kamnik"); }
+  $("del").hidden = !v;
+  $("bg").classList.add("open");
+}
+const closeForm = () => $("bg").classList.remove("open");
+
+function setDay(s) {
+  sel = s;
+  const d = parse(s);
+  mon = { y: d.getFullYear(), m: d.getMonth() };
+}
+
+$("add").onclick = () => openForm();
+$("cancel").onclick = closeForm;
+$("bg").addEventListener("click", e => { if (e.target === $("bg")) closeForm(); });
+$("form").addEventListener("submit", e => {
+  e.preventDefault();
+  const data = {};
+  for (const f of FIELDS) data[f] = $(f).value.trim();
+  if (editingId) Object.assign(visits.find(x => x.id === editingId), data);
+  else visits.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), opravljeno: false, ...data });
+  write("obiski-zadnji-kraj", data.kraj);
+  write(K_VISITS, visits);
+  closeForm();
+  query = ""; $("iskanje").value = "";
+  setDay(data.datum); render();
+});
+$("del").onclick = () => {
+  if (!confirm("Res izbrišem ta obisk?")) return;
+  visits = visits.filter(x => x.id !== editingId);
+  write(K_VISITS, visits); closeForm(); render();
+};
+
+$("iskanje").addEventListener("input", e => { query = e.target.value; render(); window.scrollTo(0, 0); });
+
+$("main").addEventListener("click", e => {
+  const t = e.target;
+  let el;
+  if ((el = t.closest("[data-day]"))) { setDay(el.dataset.day); render(); return; }
+  if ((el = t.closest("[data-mon]"))) {
+    const d = new Date(mon.y, mon.m + Number(el.dataset.mon), 1);
+    mon = { y: d.getFullYear(), m: d.getMonth() }; render(); return;
+  }
+  if (t.closest("[data-today]")) { setDay(iso(new Date())); render(); return; }
+  if ((el = t.closest("[data-step]"))) {
+    const d = parse(sel); d.setDate(d.getDate() + Number(el.dataset.step)); setDay(iso(d)); render(); return;
+  }
+  if ((el = t.closest("[data-shift]"))) {
+    const k = el.dataset.shift;
+    if (shifts[sel] === k) delete shifts[sel]; else shifts[sel] = k;
+    write(K_SHIFTS, shifts); render(); return;
+  }
+  if ((el = t.closest("[data-done]"))) {
+    const v = visits.find(x => x.id === el.dataset.done); v.opravljeno = !v.opravljeno; write(K_VISITS, visits); render(); return;
+  }
+  if ((el = t.closest("[data-edit]"))) { openForm(el.dataset.edit); return; }
+  if ((el = t.closest("[data-goto]"))) { query = ""; $("iskanje").value = ""; setDay(el.dataset.goto); render(); window.scrollTo(0, 0); }
+});
+
+// nastavitve
+function applySettings() {
+  document.documentElement.classList.toggle("big", !!settings.big);
+  $("navapp").value = settings.nav;
+  $("velikost").value = settings.big ? "big" : "normal";
+}
+$("gear").onclick = () => { applySettings(); $("bg2").classList.add("open"); };
+$("close2").onclick = () => $("bg2").classList.remove("open");
+$("bg2").addEventListener("click", e => { if (e.target === $("bg2")) $("bg2").classList.remove("open"); });
+$("navapp").onchange = e => { settings.nav = e.target.value; write(K_SET, settings); render(); };
+$("velikost").onchange = e => { settings.big = e.target.value === "big"; write(K_SET, settings); applySettings(); };
+
+$("export").onclick = () => {
+  const blob = new Blob([JSON.stringify({ visits, shifts }, null, 2)], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = "obiski-" + iso(new Date()) + ".json";
+  document.body.appendChild(a); a.click(); a.remove();
+};
+$("import").onclick = () => {
+  const inp = document.createElement("input");
+  inp.type = "file"; inp.accept = "application/json,.json";
+  inp.onchange = async () => {
+    try {
+      const data = JSON.parse(await inp.files[0].text());
+      const vs = Array.isArray(data) ? data : data.visits;       // starejsa kopija je bila samo seznam
+      if (!Array.isArray(vs)) throw 0;
+      if (!confirm("Zamenjam trenutne obiske (" + visits.length + ") s kopijo (" + vs.length + ")?")) return;
+      visits = vs; shifts = (!Array.isArray(data) && data.shifts) || {};
+      write(K_VISITS, visits); write(K_SHIFTS, shifts); render();
+    } catch (e) { alert("Datoteka ni veljavna kopija."); }
+  };
+  inp.click();
+};
+
+visits = read(K_VISITS, []); shifts = read(K_SHIFTS, {}); settings = Object.assign(settings, read(K_SET, {}));
+setDay(iso(new Date())); applySettings(); render();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(() => {});
+</script>
+</body>
+</html>
